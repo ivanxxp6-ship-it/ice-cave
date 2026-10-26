@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ice Cave — Прототип</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a1628;
+      --panel: #132238;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --ice: #7dd3fc;
+      --lava: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100dvh;
+      flex-direction: column;
+    }
+    .screen.active {
+      display: flex;
+    }
+
+    /* ===== AUTH ===== */
+    .auth-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px 20px;
+      max-width: 400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #7dd3fc, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #1e3a5f;
+      background: var(--panel);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:active {
+      background: #2563eb;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--accent2);
+      margin-top: 12px;
+    }
+    .error {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      min-height: 1.2em;
+    }
+    .switch-link {
+      text-align: center;
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .switch-link a {
+      color: var(--accent2);
+      text-decoration: none;
+    }
+
+    /* ===== NAV ===== */
+    .topnav {
+      display: flex;
+      background: var(--panel);
+      border-bottom: 1px solid #1e3a5f;
+      padding: 0 8px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .topnav button {
+      flex: 1;
+      min-width: 70px;
+      padding: 14px 8px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .topnav button.active {
+      color: var(--accent2);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    /* ===== HOME ===== */
+    .content {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--ice);
+    }
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .game-card {
+      background: var(--panel);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid #1e3a5f;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .game-card .icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0ea5e9, #1e40af);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .game-card .info {
+      flex: 1;
+    }
+    .game-card .info h3 {
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+    .game-card .info p {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .game-card .play-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ===== PROFILE & PEOPLE ===== */
+    .profile-header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      background: #1e3a5f;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .avatar .head {
+      position: absolute;
+      width: 28px;
+      height: 22px;
+      background: #facc15;
+      border-radius: 6px 6px 4px 4px;
+      top: 8px;
+      left: 22px;
+    }
+    .avatar .torso {
+      position: absolute;
+      width: 32px;
+      height: 24px;
+      background: #3b82f6;
+      top: 28px;
+      left: 20px;
+      border-radius: 4px;
+    }
+    .avatar .arm {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      background: #facc15;
+      top: 28px;
+      border-radius: 3px;
+    }
+    .avatar .arm.l { left: 8px; }
+    .avatar .arm.r { right: 8px; }
+    .avatar .leg {
+      position: absolute;
+      width: 12px;
+      height: 16px;
+      background: #22c55e;
+      bottom: 4px;
+      border-radius: 2px;
+    }
+    .avatar .leg.l { left: 22px; }
+    .avatar .leg.r { right: 22px; }
+
+    .profile-info h2 {
+      font-size: 1.3rem;
+      margin-bottom: 4px;
+    }
+    .profile-info .date {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .about-box {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid #1e3a5f;
+      margin-bottom: 20px;
+    }
+    .about-box textarea {
+      width: 100%;
+      min-height: 80px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      resize: vertical;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .about-box .save-btn {
+      margin-top: 8px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--panel);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #1e3a5f;
+      cursor: pointer;
+    }
+    .user-item .mini-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #1e3a5f;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .user-item .mini-avatar .head {
+      position: absolute;
+      width: 16px;
+      height: 12px;
+      background: #facc15;
+      border-radius: 4px 4px 3px 3px;
+      top: 5px;
+      left: 14px;
+    }
+    .user-item .mini-avatar .torso {
+      position: absolute;
+      width: 18px;
+      height: 14px;
+      background: #3b82f6;
+      border-radius: 3px;
+      top: 16px;
+      left: 13px;
+    }
+    .user-item .mini-avatar .arm {
+      position: absolute;
+      width: 6px;
+      height: 10px;
+      background: #facc15;
+      border-radius: 2px;
+      top: 16px;
+    }
+    .user-item .mini-avatar .arm.l { left: 5px; }
+    .user-item .mini-avatar .arm.r { right: 5px; }
+    .user-item .mini-avatar .leg {
+      position: absolute;
+      width: 7px;
+      height: 9px;
+      background: #22c55e;
+      border-radius: 2px;
+      bottom: 3px;
+    }
+    .user-item .mini-avatar .leg.l { left: 14px; }
+    .user-item .mini-avatar .leg.r { right: 14px; }
+    .user-item .name {
+      font-weight: 600;
+    }
+    .user-item .reg {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ===== GAME ===== */
+    #game-screen {
+      position: relative;
+      background: #020617;
+      overflow: hidden;
+    }
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    .game-ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+    }
+    .game-ui > * {
+      pointer-events: auto;
+    }
+    .game-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+    }
+    .game-topbar button {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .game-topbar .status {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+
+    /* Chat */
+    .chat-box {
+      position: absolute;
+      bottom: 170px;
+      left: 10px;
+      width: min(280px, 70vw);
+      max-height: 160px;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,0.55);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #1e3a5f;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      font-size: 0.8rem;
+      max-height: 110px;
+    }
+    .chat-messages .msg {
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+    .chat-messages .msg .nick {
+      color: var(--ice);
+      font-weight: 600;
+    }
+    .chat-input-row {
+      display: flex;
+      border-top: 1px solid #1e3a5f;
+    }
+    .chat-input-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: white;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .chat-input-row button {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 0 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    /* Mobile controls */
+    .mobile-controls {
+      position: absolute;
+      bottom: 48px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 16px;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .mobile-controls > div,
+    .mobile-controls > .jump-btn {
+      pointer-events: auto;
+    }
+    .dpad {
+      display: grid;
+      grid-template-columns: 50px 50px 50px;
+      grid-template-rows: 50px 50px;
+      gap: 4px;
+    }
+    .dpad button, .jump-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      background: rgba(30, 58, 95, 0.75);
+      color: white;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    .dpad .up { grid-column: 2; grid-row: 1; }
+    .dpad .left { grid-column: 1; grid-row: 2; }
+    .dpad .right { grid-column: 3; grid-row: 2; }
+    .dpad .down { grid-column: 2; grid-row: 2; }
+    .jump-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .finish-overlay, .death-flash {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.7);
+      z-index: 20;
+    }
+    .finish-overlay.active {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .finish-overlay h2 {
+      font-size: 1.8rem;
+      color: var(--success);
+    }
+    .finish-overlay button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .empty-hint {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px;
+      font-size: 0.95rem;
+    }
+
+    #server-status {
+      position: fixed; top: 8px; right: 8px; z-index: 9999;
+      padding: 7px 11px; border-radius: 999px;
+      background: rgba(19,34,56,.94); border: 1px solid #1e3a5f;
+      color: #cbd5e1; font-size: 12px; box-shadow: 0 4px 14px #0004;
+      max-width: calc(100vw - 16px);
+    }
+  </style>
+</head>
+<body>
+  <div id="server-status">Подключение к серверу... ❄️</div>
+
+  <!-- ===== LOGIN ===== -->
+  <div id="login-screen" class="screen active">
+    <div class="auth-wrap">
+      <div class="logo">
+        <h1>❄ Ice Cave</h1>
+        <p>Платформа мини-игр</p>
+      </div>
+      <div class="error" id="login-error"></div>
+      <div class="form-group">
+        <label>Ник</label>
+        <input type="text" id="login-nick" autocomplete="username" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" id="login-pass" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">Войти</button>
+      <div class="switch-link">
+        Нет аккаунта? <a href="#" onclick="showScreen('register-screen'); return false;">Зарегистрироваться</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REGISTER ===== -->
+  <div id="register-screen" class="screen">
+    <div class="auth-wrap">
+      <div class="logo">
+        <h1>❄ Ice Cave</h1>
+        <p>Создай аккаунт</p>
+      </div>
+      <div class="error" id="reg-error"></div>
+      <div class="form-group">
+        <label>Ник</label>
+        <input type="text" id="reg-nick" maxlength="20" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" id="reg-pass" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>Подтверждение пароля</label>
+        <input type="password" id="reg-pass2" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" onclick="doRegister()">Зарегистрироваться</button>
+      <div class="switch-link">
+        Уже есть аккаунт? <a href="#" onclick="showScreen('login-screen'); return false;">Войти</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <div id="home-screen" class="screen">
+    <nav class="topnav">
+      <button class="active" data-tab="home">Игры</button>
+      <button data-tab="profile" onclick="openProfile(null)">Профиль</button>
+      <button data-tab="people" onclick="showPeople()">Люди</button>
+      <button onclick="doLogout()">Выход</button>
+    </nav>
+    <div class="content">
+      <div class="section-title">Недавние игры</div>
+      <div class="cards" id="recent-games">
+        <div class="empty-hint">Пока ничего не запускал</div>
+      </div>
+      <div class="section-title">Рекомендации</div>
+      <div class="cards">
+        <div class="game-card">
+          <div class="icon">🧊</div>
+          <div class="info">
+            <h3>Ice Cave Obby</h3>
+            <p>Паркур по ледяной пещере · 2D</p>
+          </div>
+          <button class="play-btn" onclick="startGame()">Играть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE ===== -->
+  <div id="profile-screen" class="screen">
+    <nav class="topnav">
+      <button data-tab="home" onclick="showScreen('home-screen')">Игры</button>
+      <button class="active" data-tab="profile">Профиль</button>
+      <button data-tab="people" onclick="showPeople()">Люди</button>
+      <button onclick="doLogout()">Выход</button>
+    </nav>
+    <div class="content">
+      <div class="profile-header">
+        <div class="avatar" id="profile-avatar">
+          <div class="head"></div>
+          <div class="torso"></div>
+          <div class="arm l"></div>
+          <div class="arm r"></div>
+          <div class="leg l"></div>
+          <div class="leg r"></div>
+        </div>
+        <div class="profile-info">
+          <h2 id="profile-nick">—</h2>
+          <div class="date" id="profile-date">—</div>
+        </div>
+      </div>
+      <div class="about-box">
+        <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">О себе</label>
+        <textarea id="profile-about" placeholder="Напиши что-нибудь о себе..."></textarea>
+        <button class="save-btn" id="about-save" onclick="saveAbout()">Сохранить</button>
+      </div>
+      <div class="section-title">Недавние игры</div>
+      <div class="cards" id="profile-recent">
+        <div class="empty-hint">Пока пусто</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PEOPLE ===== -->
+  <div id="people-screen" class="screen">
+    <nav class="topnav">
+      <button data-tab="home" onclick="showScreen('home-screen')">Игры</button>
+      <button data-tab="profile" onclick="openProfile(null)">Профиль</button>
+      <button class="active" data-tab="people">Люди</button>
+      <button onclick="doLogout()">Выход</button>
+    </nav>
+    <div class="content">
+      <div class="section-title">Все игроки</div>
+      <div class="user-list" id="people-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div id="game-screen" class="screen">
+    <canvas id="gameCanvas"></canvas>
+    <div class="game-ui">
+      <div class="game-topbar">
+        <button onclick="exitGame()">← Выйти</button>
+        <div class="status" id="game-status">Игроков: 1</div>
+      </div>
+
+      <div class="chat-box">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Сообщение..." maxlength="120" onkeydown="if(event.key==='Enter')sendChat()">
+          <button onclick="sendChat()">➤</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls" id="mobile-controls">
+        <div class="dpad">
+          <button class="up" data-key="w">▲</button>
+          <button class="left" data-key="a">◀</button>
+          <button class="down" data-key="s">▼</button>
+          <button class="right" data-key="d">▶</button>
+        </div>
+        <button class="jump-btn" id="jumpBtn">ПРЫГ</button>
+      </div>
+    </div>
+
+    <div class="finish-overlay" id="finish-overlay">
+      <h2>🎉 Финиш!</h2>
+      <p style="color:#94a3b8">Ты прошёл Ice Cave Obby</p>
+      <button onclick="restartGame()">Ещё раз</button>
+      <button onclick="exitGame()" style="background:#334155;margin-top:8px;">Выйти</button>
+    </div>
+  </div>
+
+<script>
+/* ===================== STORAGE & AUTH ===================== */
+const STORAGE_KEY = 'ice_cave_users_cache';
+const SESSION_KEY = 'ice_cave_session';
+
+// JSONBin.io: создай Bin с объектом {"users":{}} и вставь данные из JSONBin.
+const JSONBIN_BIN_ID = 'ВСТАВЬ_BIN_ID';
+const JSONBIN_API_KEY = 'ВСТАВЬ_JSONBIN_API_KEY';
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+let cloudReady = false;
+let cloudWriteQueue = Promise.resolve();
+let cloudSaveTimer = null;
+
+function setServerStatus(message, color = '#cbd5e1') {
+  const el = document.getElementById('server-status');
+  if (el) { el.textContent = message; el.style.color = color; }
+}
+function jsonBinConfigured() {
+  return JSONBIN_BIN_ID && JSONBIN_API_KEY &&
+    !JSONBIN_BIN_ID.includes('ВСТАВЬ') && !JSONBIN_API_KEY.includes('ВСТАВЬ');
+}
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveUsers(users) {
+  // Локальный кэш нужен интерфейсу; основное постоянное хранилище — JSONBin.
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  if (cloudReady) scheduleCloudSave(users);
+}
+function scheduleCloudSave(users) {
+  clearTimeout(cloudSaveTimer);
+  const snapshot = JSON.parse(JSON.stringify(users));
+  cloudSaveTimer = setTimeout(() => {
+    cloudWriteQueue = cloudWriteQueue.then(async () => {
+      try {
+        const response = await fetch(JSONBIN_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': JSONBIN_API_KEY,
+            'X-Bin-Versioning': 'false'
+          },
+          body: JSON.stringify({ users: snapshot })
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        setServerStatus('Подключено к JSONBin.io ❄️', '#86efac');
+      } catch (error) {
+        console.error('JSONBin save error:', error);
+        setServerStatus('Ошибка сохранения на сервер ❄️', '#fca5a5');
+      }
+    });
+  }, 350);
+}
+async function initJSONBin() {
+  if (!jsonBinConfigured()) {
+    setServerStatus('Вставь ключ JSONBin.io ❄️', '#fcd34d');
+    return;
+  }
+  setServerStatus('Подключение к серверу... ❄️');
+  try {
+    const response = await fetch(JSONBIN_URL + '/latest', {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const result = await response.json();
+    const remoteUsers = result && result.record && result.record.users;
+    const localUsers = getUsers();
+    if (remoteUsers && typeof remoteUsers === 'object') {
+      // Объединяем облачные данные с локальным кэшем, не затирая локальные аккаунты.
+      const merged = { ...remoteUsers, ...localUsers };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      cloudReady = true;
+      // Если локальных записей больше, отправляем объединённый результат в облако.
+      if (Object.keys(merged).length !== Object.keys(remoteUsers).length) {
+        scheduleCloudSave(merged);
+      }
+    } else {
+      cloudReady = true;
+      scheduleCloudSave(localUsers);
+    }
+    setServerStatus('Подключено к JSONBin.io ❄️', '#86efac');
+  } catch (error) {
+    console.error('JSONBin connection error:', error);
+    setServerStatus('Нет связи с JSONBin.io ❄️', '#fca5a5');
+  }
+}
+function getSession() {
+  return localStorage.getItem(SESSION_KEY);
+}
+function setSession(nick) {
+  if (nick) localStorage.setItem(SESSION_KEY, nick);
+  else localStorage.removeItem(SESSION_KEY);
+}
+
+// Публичная версия пользователей (без паролей) для синхронизации
+function getPublicUsers() {
+  const users = getUsers();
+  const pub = {};
+  for (const key in users) {
+    const u = users[key];
+    pub[key] = {
+      nick: u.nick,
+      about: u.about || '',
+      registered: u.registered,
+      recent: u.recent || []
+    };
+  }
+  return pub;
+}
+
+// Слияние полученных пользователей в локальный список
+function mergeUsers(remoteUsers) {
+  if (!remoteUsers || typeof remoteUsers !== 'object') return;
+  const local = getUsers();
+  let changed = false;
+
+  for (const key in remoteUsers) {
+    const remote = remoteUsers[key];
+    if (!local[key]) {
+      // Новый пользователь — добавляем (пароля нет, войти не сможет, но в списке будет)
+      local[key] = {
+        nick: remote.nick,
+        pass: '',           // пароль неизвестен
+        about: remote.about || '',
+        registered: remote.registered || Date.now(),
+        recent: remote.recent || []
+      };
+      changed = true;
+    } else {
+      // Обновляем about и recent если они новее/больше
+      if (remote.about && remote.about !== local[key].about) {
+        local[key].about = remote.about;
+        changed = true;
+      }
+      if (remote.recent && remote.recent.length > (local[key].recent || []).length) {
+        local[key].recent = remote.recent;
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) {
+    saveUsers(local);
+    // Обновляем экран "Люди", если он открыт
+    if (document.getElementById('people-screen').classList.contains('active')) {
+      showPeople();
+    }
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'home-screen') renderRecent();
+}
+
+function doRegister() {
+  const nick = document.getElementById('reg-nick').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  const err = document.getElementById('reg-error');
+
+  if (nick.length < 3) { err.textContent = 'Ник минимум 3 символа'; return; }
+  if (pass.length < 3) { err.textContent = 'Пароль минимум 3 символа'; return; }
+  if (pass !== pass2) { err.textContent = 'Пароли не совпадают'; return; }
+
+  const users = getUsers();
+  if (users[nick.toLowerCase()]) { err.textContent = 'Такой ник уже занят'; return; }
+
+  users[nick.toLowerCase()] = {
+    nick,
+    pass,
+    about: '',
+    registered: Date.now(),
+    recent: []
+  };
+  saveUsers(users);
+  setSession(nick);
+  err.textContent = '';
+  // Рассылаем обновлённый список игроков
+  broadcastUsers();
+  showScreen('home-screen');
+}
+
+function doLogin() {
+  const nick = document.getElementById('login-nick').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+
+  if (!nick || !pass) { err.textContent = 'Заполни все поля'; return; }
+
+  const users = getUsers();
+  const user = users[nick.toLowerCase()];
+  if (!user || user.pass !== pass) {
+    err.textContent = 'Неверный ник или пароль';
+    return;
+  }
+  setSession(user.nick);
+  err.textContent = '';
+  showScreen('home-screen');
+}
+
+function doLogout() {
+  setSession(null);
+  showScreen('login-screen');
+  document.getElementById('login-nick').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+/* ===================== HOME / RECENT ===================== */
+function addRecent(gameName) {
+  const nick = getSession();
+  if (!nick) return;
+  const users = getUsers();
+  const key = nick.toLowerCase();
+  if (!users[key]) return;
+  users[key].recent = users[key].recent.filter(g => g !== gameName);
+  users[key].recent.unshift(gameName);
+  if (users[key].recent.length > 5) users[key].recent.pop();
+  saveUsers(users);
+}
+
+function renderRecent() {
+  const nick = getSession();
+  const el = document.getElementById('recent-games');
+  if (!nick) { el.innerHTML = '<div class="empty-hint">Пока ничего не запускал</div>'; return; }
+  const users = getUsers();
+  const recent = (users[nick.toLowerCase()] || {}).recent || [];
+  if (!recent.length) {
+    el.innerHTML = '<div class="empty-hint">Пока ничего не запускал</div>';
+    return;
+  }
+  el.innerHTML = recent.map(g => `
+    <div class="game-card">
+      <div class="icon">🧊</div>
+      <div class="info">
+        <h3>${g}</h3>
+        <p>Недавно запускал</p>
+      </div>
+      <button class="play-btn" onclick="startGame()">Играть</button>
+    </div>
+  `).join('');
+}
+
+/* ===================== PROFILE ===================== */
+let viewingNick = null;
+
+function openProfile(nick) {
+  const me = getSession();
+  viewingNick = nick || me;
+  const users = getUsers();
+  const user = users[viewingNick.toLowerCase()];
+  if (!user) return;
+
+  document.getElementById('profile-nick').textContent = user.nick;
+  document.getElementById('profile-date').textContent = 'Регистрация: ' + new Date(user.registered).toLocaleDateString('ru-RU');
+  const aboutEl = document.getElementById('profile-about');
+  aboutEl.value = user.about || '';
+  const saveBtn = document.getElementById('about-save');
+  const isMe = viewingNick.toLowerCase() === me.toLowerCase();
+  aboutEl.readOnly = !isMe;
+  saveBtn.style.display = isMe ? 'inline-block' : 'none';
+
+  const recentEl = document.getElementById('profile-recent');
+  const recent = user.recent || [];
+  if (!recent.length) {
+    recentEl.innerHTML = '<div class="empty-hint">Пока пусто</div>';
+  } else {
+    recentEl.innerHTML = recent.map(g => `
+      <div class="game-card">
+        <div class="icon">🧊</div>
+        <div class="info"><h3>${g}</h3></div>
+      </div>
+    `).join('');
+  }
+  showScreen('profile-screen');
+}
+
+function saveAbout() {
+  const me = getSession();
+  if (!me) return;
+  const users = getUsers();
+  const key = me.toLowerCase();
+  if (!users[key]) return;
+  users[key].about = document.getElementById('profile-about').value.trim();
+  saveUsers(users);
+  alert('Сохранено');
+}
+
+/* ===================== PEOPLE ===================== */
+function showPeople() {
+  // Запрашиваем свежий список у других игроков
+  broadcastUsers();
+
+  const list = document.getElementById('people-list');
+  const users = getUsers();
+  const entries = Object.values(users).sort((a, b) => b.registered - a.registered);
+  if (!entries.length) {
+    list.innerHTML = '<div class="empty-hint">Пока никого нет</div>';
+  } else {
+    list.innerHTML = entries.map(u => `
+      <div class="user-item" onclick="openProfile('${u.nick}')">
+        <div class="mini-avatar">
+          <div class="head"></div>
+          <div class="torso"></div>
+          <div class="arm l"></div>
+          <div class="arm r"></div>
+          <div class="leg l"></div>
+          <div class="leg r"></div>
+        </div>
+        <div>
+          <div class="name">${u.nick}</div>
+          <div class="reg">${new Date(u.registered).toLocaleDateString('ru-RU')}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  showScreen('people-screen');
+}
+
+/* ===================== MULTIPLAYER (PeerJS) ===================== */
+/* Работает между разными телефонами без своего сервера */
+let peer = null;
+let connections = {};       // peerId -> connection
+let remotePlayers = {};     // id -> {nick, x, y}
+let myId = null;
+let multiplayerReady = false;
+const ROOM_ID = 'icecave-obby-room-v1';
+
+function initMultiplayer() {
+  try {
+    // Сначала пробуем стать хостом комнаты
+    peer = new Peer(ROOM_ID, {
+      debug: 0,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+      }
+    });
+
+    peer.on('open', (id) => {
+      myId = id;
+      multiplayerReady = true;
+      console.log('Я хост комнаты:', id);
+    });
+
+    peer.on('connection', (conn) => {
+      setupConnection(conn);
+    });
+
+    peer.on('error', (err) => {
+      if (err.type === 'unavailable-id') {
+        // Комната занята — подключаемся как клиент
+        console.log('Комната занята, подключаюсь...');
+        connectAsClient();
+      } else {
+        console.warn('Peer error:', err.type);
+      }
+    });
+
+  } catch (e) {
+    console.warn('PeerJS error', e);
+  }
+}
+
+function connectAsClient() {
+  peer = new Peer({
+    debug: 0,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    }
+  });
+
+  peer.on('open', (id) => {
+    myId = id;
+    multiplayerReady = true;
+    console.log('Мой ID:', id);
+
+    const conn = peer.connect(ROOM_ID, { reliable: true });
+    setupConnection(conn);
+  });
+
+  peer.on('connection', (conn) => {
+    setupConnection(conn);
+  });
+
+  peer.on('error', (err) => {
+    console.warn('Client peer error:', err.type);
+  });
+}
+
+function setupConnection(conn) {
+  if (connections[conn.peer]) return;
+
+  conn.on('open', () => {
+    connections[conn.peer] = conn;
+    // Приветствие + отправляем свой список игроков
+    conn.send({
+      type: 'hello',
+      id: myId,
+      nick: getSession() || 'Игрок',
+      users: getPublicUsers()
+    });
+  });
+
+  conn.on('data', (data) => {
+    if (!data || !data.type) return;
+
+    if (data.type === 'pos') {
+      remotePlayers[data.id] = {
+        nick: data.nick || 'Игрок',
+        x: data.x,
+        y: data.y
+      };
+    }
+    else if (data.type === 'chat') {
+      addChatMessage(data.nick, data.text);
+    }
+    else if (data.type === 'hello') {
+      remotePlayers[data.id] = remotePlayers[data.id] || {
+        nick: data.nick || 'Игрок',
+        x: 50,
+        y: 200
+      };
+      // Синхронизируем список игроков
+      if (data.users) {
+        mergeUsers(data.users);
+      }
+    }
+    else if (data.type === 'users') {
+      // Получили обновлённый список
+      mergeUsers(data.users);
+    }
+    else if (data.type === 'leave') {
+      delete remotePlayers[data.id];
+      delete connections[data.id];
+    }
+  });
+
+  conn.on('close', () => {
+    delete connections[conn.peer];
+    delete remotePlayers[conn.peer];
+  });
+
+  conn.on('error', () => {
+    delete connections[conn.peer];
+  });
+}
+
+function broadcastPos(x, y) {
+  if (!multiplayerReady) return;
+  const msg = {
+    type: 'pos',
+    id: myId,
+    nick: getSession() || 'Игрок',
+    x: Math.round(x),
+    y: Math.round(y)
+  };
+  Object.values(connections).forEach(c => {
+    try { if (c.open) c.send(msg); } catch(e) {}
+  });
+}
+
+function broadcastChat(text) {
+  if (!multiplayerReady) return;
+  const msg = {
+    type: 'chat',
+    nick: getSession() || 'Игрок',
+    text
+  };
+  Object.values(connections).forEach(c => {
+    try { if (c.open) c.send(msg); } catch(e) {}
+  });
+}
+
+function broadcastLeave() {
+  if (!multiplayerReady) return;
+  const msg = { type: 'leave', id: myId };
+  Object.values(connections).forEach(c => {
+    try { if (c.open) c.send(msg); } catch(e) {}
+  });
+}
+
+function broadcastUsers() {
+  if (!multiplayerReady) return;
+  const msg = {
+    type: 'users',
+    users: getPublicUsers()
+  };
+  Object.values(connections).forEach(c => {
+    try { if (c.open) c.send(msg); } catch(e) {}
+  });
+}
+
+/* ===================== GAME ===================== */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, scale;
+let player, keys = {}, gameRunning = false, animId;
+let platforms = [], moving = [], kills = [], checkpoints = [], finish;
+let currentCheckpoint = null;
+let cameraX = 0;
+let lastBroadcast = 0;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  W = rect.width;
+  H = rect.height;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  scale = Math.min(W / 400, H / 300);
+}
+
+function makeLevel() {
+  platforms = [];
+  moving = [];
+  kills = [];
+  checkpoints = [];
+
+  // ground
+  platforms.push({ x: 0, y: 280, w: 200, h: 40 });
+  platforms.push({ x: 220, y: 280, w: 80, h: 20 });
+  platforms.push({ x: 340, y: 250, w: 60, h: 20 });
+  platforms.push({ x: 430, y: 220, w: 80, h: 20 });
+  platforms.push({ x: 550, y: 280, w: 120, h: 40 });
+
+  // higher
+  platforms.push({ x: 700, y: 240, w: 60, h: 16 });
+  platforms.push({ x: 800, y: 200, w: 50, h: 16 });
+  platforms.push({ x: 900, y: 160, w: 70, h: 16 });
+  platforms.push({ x: 1000, y: 200, w: 100, h: 16 });
+
+  // narrow beams
+  platforms.push({ x: 1150, y: 180, w: 30, h: 12 });
+  platforms.push({ x: 1220, y: 150, w: 30, h: 12 });
+  platforms.push({ x: 1290, y: 120, w: 30, h: 12 });
+  platforms.push({ x: 1360, y: 150, w: 80, h: 16 });
+
+  // moving
+  moving.push({ x: 1500, y: 180, w: 60, h: 14, minX: 1480, maxX: 1620, speed: 1.2, dir: 1 });
+  platforms.push({ x: 1680, y: 160, w: 80, h: 16 });
+
+  // lava section
+  kills.push({ x: 1800, y: 270, w: 200, h: 30 });
+  platforms.push({ x: 1820, y: 220, w: 40, h: 12 });
+  platforms.push({ x: 1900, y: 180, w: 40, h: 12 });
+  platforms.push({ x: 1980, y: 220, w: 40, h: 12 });
+  platforms.push({ x: 2050, y: 160, w: 90, h: 16 });
+
+  // final climb
+  platforms.push({ x: 2200, y: 200, w: 50, h: 14 });
+  platforms.push({ x: 2280, y: 160, w: 50, h: 14 });
+  platforms.push({ x: 2360, y: 120, w: 50, h: 14 });
+  platforms.push({ x: 2440, y: 90, w: 120, h: 16 });
+
+  // checkpoints
+  checkpoints.push({ x: 560, y: 250, w: 12, h: 30 });
+  checkpoints.push({ x: 1010, y: 170, w: 12, h: 30 });
+  checkpoints.push({ x: 1690, y: 130, w: 12, h: 30 });
+  checkpoints.push({ x: 2060, y: 130, w: 12, h: 30 });
+
+  finish = { x: 2500, y: 50, w: 40, h: 40 };
+}
+
+function resetPlayer() {
+  const start = currentCheckpoint || { x: 40, y: 240 };
+  player = {
+    x: start.x,
+    y: start.y,
+    w: 18,
+    h: 28,
+    vx: 0,
+    vy: 0,
+    onGround: false
+  };
+}
+
+function startGame() {
+  addRecent('Ice Cave Obby');
+  currentCheckpoint = null;
+  makeLevel();
+  resetPlayer();
+  remotePlayers = {};
+  document.getElementById('finish-overlay').classList.remove('active');
+  // restore chat history
+  const chatBox = document.getElementById('chat-messages');
+  chatBox.innerHTML = '';
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('ice_cave_chat') || '[]');
+    saved.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'msg';
+      div.innerHTML = `<span class="nick">${m.nick}</span>: ${m.text}`;
+      chatBox.appendChild(div);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+  } catch(e) {}
+  showScreen('game-screen');
+  resizeCanvas();
+  gameRunning = true;
+  keys = {};
+  coyoteTimer = 0;
+  wantJump = false;
+  lastBroadcast = 0;
+  loop();
+}
+
+function exitGame() {
+  gameRunning = false;
+  if (animId) cancelAnimationFrame(animId);
+  broadcastLeave();
+  showScreen('home-screen');
+}
+
+function restartGame() {
+  document.getElementById('finish-overlay').classList.remove('active');
+  currentCheckpoint = null;
+  makeLevel();
+  resetPlayer();
+  gameRunning = true;
+  loop();
+}
+
+/* Input */
+let coyoteTimer = 0;
+let wantJump = false; // флаг "хочу прыгнуть"
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (['w','a','s','d'].includes(k)) {
+    keys[k] = true;
+    e.preventDefault();
+  }
+  if (k === ' ' || e.code === 'Space') {
+    wantJump = true;
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (['w','a','s','d'].includes(k)) {
+    keys[k] = false;
+  }
+});
+
+// Движение (влево/вправо)
+function bindMobileControls() {
+  document.querySelectorAll('[data-key]').forEach(btn => {
+    const key = btn.dataset.key;
+    const down = (e) => { e.preventDefault(); e.stopPropagation(); keys[key] = true; };
+    const up   = (e) => { e.preventDefault(); e.stopPropagation(); keys[key] = false; };
+
+    btn.addEventListener('touchstart', down, { passive: false });
+    btn.addEventListener('touchend', up, { passive: false });
+    btn.addEventListener('touchcancel', up, { passive: false });
+    btn.addEventListener('pointerdown', down);
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointerleave', up);
+  });
+
+  // Отдельная надёжная кнопка прыжка
+  const jumpBtn = document.getElementById('jumpBtn');
+  if (jumpBtn) {
+    const doJump = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      wantJump = true;
+    };
+    jumpBtn.addEventListener('touchstart', doJump, { passive: false });
+    jumpBtn.addEventListener('pointerdown', doJump);
+    jumpBtn.addEventListener('mousedown', doJump);
+  }
+}
+bindMobileControls();
+
+function updatePlayer() {
+  const speed = 2.9;
+  const jumpForce = -8.5;
+  const gravity = 0.36;
+
+  // Движение влево/вправо
+  if (keys['a']) player.vx = -speed;
+  else if (keys['d']) player.vx = speed;
+  else player.vx *= 0.78;
+
+  // Coyote time — можно прыгнуть чуть после схода с платформы
+  if (player.onGround) {
+    coyoteTimer = 10;
+  } else if (coyoteTimer > 0) {
+    coyoteTimer--;
+  }
+
+  // Прыжок
+  if (wantJump && (player.onGround || coyoteTimer > 0)) {
+    player.vy = jumpForce;
+    player.onGround = false;
+    coyoteTimer = 0;
+  }
+  wantJump = false; // сбрасываем каждый кадр
+
+  player.vy += gravity;
+  player.x += player.vx;
+  player.y += player.vy;
+
+  // collisions with platforms + moving
+  player.onGround = false;
+  const allPlats = platforms.concat(moving);
+
+  for (const p of allPlats) {
+    if (player.x + player.w > p.x && player.x < p.x + p.w &&
+        player.y + player.h > p.y && player.y < p.y + p.h) {
+      // from top
+      if (player.vy > 0 && player.y + player.h - player.vy <= p.y + 4) {
+        player.y = p.y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+        // ride moving platform
+        if (p.speed) player.x += p.speed * p.dir;
+      }
+      // from bottom
+      else if (player.vy < 0 && player.y - player.vy >= p.y + p.h - 4) {
+        player.y = p.y + p.h;
+        player.vy = 0;
+      }
+      // sides
+      else if (player.vx > 0) {
+        player.x = p.x - player.w;
+        player.vx = 0;
+      } else if (player.vx < 0) {
+        player.x = p.x + p.w;
+        player.vx = 0;
+      }
+    }
+  }
+
+  // kill bricks
+  for (const k of kills) {
+    if (player.x + player.w > k.x && player.x < k.x + k.w &&
+        player.y + player.h > k.y && player.y < k.y + k.h) {
+      resetPlayer();
+      return;
+    }
+  }
+
+  // checkpoints
+  for (const c of checkpoints) {
+    if (player.x + player.w > c.x && player.x < c.x + c.w &&
+        player.y + player.h > c.y && player.y < c.y + c.h) {
+      currentCheckpoint = { x: c.x - 10, y: c.y - 10 };
+    }
+  }
+
+  // finish
+  if (player.x + player.w > finish.x && player.x < finish.x + finish.w &&
+      player.y + player.h > finish.y && player.y < finish.y + finish.h) {
+    gameRunning = false;
+    document.getElementById('finish-overlay').classList.add('active');
+  }
+
+  // bounds
+  if (player.y > 400) resetPlayer();
+  if (player.x < 0) player.x = 0;
+
+  // move platforms
+  for (const m of moving) {
+    m.x += m.speed * m.dir;
+    if (m.x <= m.minX || m.x + m.w >= m.maxX) m.dir *= -1;
+  }
+
+  // camera
+  cameraX = player.x - W * 0.35;
+  if (cameraX < 0) cameraX = 0;
+}
+
+function drawPlayer(x, y, isRemote = false) {
+  // legs (green)
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(x + 2, y + 20, 6, 8);
+  ctx.fillRect(x + 10, y + 20, 6, 8);
+  // torso (blue)
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillRect(x + 1, y + 10, 16, 12);
+  // arms (yellow)
+  ctx.fillStyle = '#facc15';
+  ctx.fillRect(x - 3, y + 11, 5, 9);
+  ctx.fillRect(x + 16, y + 11, 5, 9);
+  // head (yellow)
+  ctx.fillRect(x + 3, y + 1, 12, 10);
+  // eyes
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(x + 5, y + 4, 2, 2);
+  ctx.fillRect(x + 11, y + 4, 2, 2);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // background gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0c1929');
+  grad.addColorStop(1, '#1e3a5f');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // ice crystals decoration
+  ctx.fillStyle = 'rgba(125, 211, 252, 0.08)';
+  for (let i = 0; i < 20; i++) {
+    const sx = ((i * 137 + cameraX * 0.3) % (W + 100)) - 50;
+    ctx.beginPath();
+    ctx.moveTo(sx, (i * 47) % H);
+    ctx.lineTo(sx + 8, (i * 47) % H + 20);
+    ctx.lineTo(sx - 8, (i * 47) % H + 20);
+    ctx.fill();
+  }
+
+  ctx.save();
+  ctx.translate(-cameraX, 0);
+
+  // platforms
+  for (const p of platforms) {
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.fillStyle = '#e0f2fe';
+    ctx.fillRect(p.x, p.y, p.w, 3);
+  }
+
+  // moving
+  for (const m of moving) {
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(m.x, m.y, m.w, m.h);
+    ctx.fillStyle = '#7dd3fc';
+    ctx.fillRect(m.x, m.y, m.w, 3);
+  }
+
+  // lava
+  for (const k of kills) {
+    ctx.fillStyle = '#ea580c';
+    ctx.fillRect(k.x, k.y, k.w, k.h);
+    ctx.fillStyle = '#fbbf24';
+    for (let i = 0; i < k.w; i += 12) {
+      ctx.fillRect(k.x + i, k.y, 6, 4);
+    }
+  }
+
+  // checkpoints
+  for (const c of checkpoints) {
+    const active = currentCheckpoint && Math.abs(currentCheckpoint.x - (c.x - 10)) < 5;
+    ctx.fillStyle = active ? '#22c55e' : '#f87171';
+    ctx.fillRect(c.x, c.y, 4, c.h);
+    ctx.fillStyle = active ? '#4ade80' : '#fca5a5';
+    ctx.beginPath();
+    ctx.moveTo(c.x + 4, c.y);
+    ctx.lineTo(c.x + 18, c.y + 6);
+    ctx.lineTo(c.x + 4, c.y + 12);
+    ctx.fill();
+  }
+
+  // finish
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(finish.x, finish.y, finish.w, finish.h);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('FINISH', finish.x - 4, finish.y - 6);
+
+  // remote players (не удаляем по таймауту — только по событию leave)
+  for (const id in remotePlayers) {
+    const r = remotePlayers[id];
+    drawPlayer(r.x, r.y, true);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(r.nick, r.x + 9, r.y - 4);
+    ctx.textAlign = 'left';
+  }
+
+  // local player
+  drawPlayer(player.x, player.y);
+
+  ctx.restore();
+
+  // status
+  const count = 1 + Object.keys(remotePlayers).length;
+  document.getElementById('game-status').textContent = 'Игроков: ' + count;
+}
+
+function loop() {
+  if (!gameRunning) return;
+  updatePlayer();
+  draw();
+
+  // broadcast position ~25 times/sec
+  const now = Date.now();
+  if (now - lastBroadcast > 40) {
+    broadcastPos(player.x, player.y);
+    lastBroadcast = now;
+  }
+
+  animId = requestAnimationFrame(loop);
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  addChatMessage(getSession(), text);
+  broadcastChat(text);
+  input.value = '';
+}
+
+function addChatMessage(nick, text) {
+  const safeText = text.replace(/</g,'&lt;');
+  const box = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `<span class="nick">${nick}</span>: ${safeText}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+
+  // save to sessionStorage (keeps chat while tab is open)
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('ice_cave_chat') || '[]');
+    saved.push({ nick, text: safeText });
+    if (saved.length > 50) saved.shift();
+    sessionStorage.setItem('ice_cave_chat', JSON.stringify(saved));
+  } catch(e) {}
+}
+
+/* ===================== INIT ===================== */
+window.addEventListener('resize', () => {
+  if (document.getElementById('game-screen').classList.contains('active')) {
+    resizeCanvas();
+  }
+});
+
+// Подключение облачного хранилища JSONBin.io
+initJSONBin();
+
+// Инициализация мультиплеера
+initMultiplayer();
+
+// restore session
+if (getSession()) {
+  showScreen('home-screen');
+} else {
+  showScreen('login-screen');
+}
+</script>
+</body>
+</html>
